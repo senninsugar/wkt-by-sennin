@@ -1,103 +1,76 @@
 const express = require("express");
 const router = express.Router();
 const axios = require("axios");
-const ytService = require("../../server/youtube.js"); 
-const videoEngine = require("../../server/wakame.js");
+const path = require("path");
+const http = require('http');
+const serverYt = require("../../server/youtube.js");
+const wakamess = require("../../server/wakame.js");
 
-const SERVERS = {
-    invidious: { name: 'Standard', url: 'https://invidious.example.com' },
-    siawaseok: { name: 'Premium Cache', url: 'https://siawaseok.f5.si', type: 'json' },
-    yudlp:     { name: 'Fast Stream', url: 'https://yudlp.vercel.app', type: 'array' }
-};
+const user_agent = process.env.USER_AGENT || "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36";
+const serverUrls = ['direct']
 
 router.get('/:id', async (req, res) => {
     const videoId = req.params.id;
-    const mode = req.cookies.playbackMode || 'normal';
-
-    if (['edu', 'nocookie'].includes(mode)) {
-        return res.redirect(`/wkt/yt/${mode}/${videoId}`);
+    const cookies = parseCookies(req);
+    const wakames = cookies.playbackMode;
+    if (wakames == "edu") {
+        return res.redirect(`/wkt/yt/edu/${videoId}`);
     }
-
+    if (wakames == "nocookie") {
+        return res.redirect(`/wkt/yt/nocookie/${videoId}`);
+    }
+    let baseUrl = 'direct';
     if (!/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
-        return res.status(400).send('Invalid Video ID');
+        return res.status(400).send('videoIDが正しくありません');
     }
-
-    const requestedServer = req.query.server;
-    let finalServer = requestedServer || 'invidious';
-    let systemNotice = null;
-
     try {
-        if (!requestedServer) {
-            const bestServer = await findBestCacheServer(videoId);
-            if (bestServer) {
-                finalServer = bestServer;
-                systemNotice = `最適化サーバー「${bestServer}」を自動選択しました。`;
-            }
-        }
-
-        const [videoStream, rawInfo] = await Promise.all([
-            videoEngine.getYouTube(videoId, finalServer),
-            ytService.infoGet(videoId)
-        ]);
-
-        const videoInfo = normalizeVideoData(rawInfo);
-
-        res.render('tube/watch.ejs', { 
-            videoData: videoStream, 
-            videoInfo, 
-            videoId, 
-            baseUrl: finalServer, 
-            systemNotice 
-        });
-
-    } catch (error) {
-        console.error(`Render Error [${videoId}]:`, error.message);
-        
-        const fallbackList = Object.keys(SERVERS).sort(() => Math.random() - 0.5);
-        res.status(500).render('tube/error_retry.ejs', { 
-            videoId, 
-            error: '動画の読み込みに失敗しました。',
-            suggestedServers: fallbackList
-        });
-    }
+      const videoData = await wakamess.getYouTube(videoId);
+      const Info = await serverYt.infoGet(videoId);
+      const videoInfo = {
+        title: Info.primary_info.title.text || "",
+        channelId: Info.secondary_info.owner.author.id || "",
+        channelIcon: Info.secondary_info.owner.author.thumbnails[0].url || '',
+        channelName: Info.secondary_info.owner.author.name || "",
+        channelSubsc: Info.secondary_info.owner.subscriber_count.text || "",
+        published: Info.primary_info.published,
+        viewCount: Info.primary_info.view_count.short_view_count?.text || Info.primary_info.view_count.view_count?.text || "",
+        likeCount: Info.primary_info.menu.top_level_buttons.short_like_count || Info.primary_info.menu.top_level_buttons.like_count || Info.basic_info.like_count || "",
+        description: Info.secondary_info.description.text || "",
+        watch_next_feed: Info.watch_next_feed || "",
+      };
+      res.render('tube/watch.ejs', { videoData, videoInfo, videoId, baseUrl });
+  } catch (error) {
+      const shufServerUrls = shuffleArray([...serverUrls]);
+      res.status(500).render('tube/mattev.ejs', { 
+      videoId, baseUrl, 
+      serverUrls: shufServerUrls,
+      error: '動画を取得できません', 
+      details: error.message 
+    });
+  }
 });
 
-async function findBestCacheServer(videoId) {
-    const check = async (id, serverKey) => {
-        const config = SERVERS[serverKey];
-        const res = await axios.get(`${config.url}/api/cache`, { timeout: 1500 });
-        
-        if (config.type === 'array') return res.data.video.includes(id) ? serverKey : null;
-        return res.data[id] ? serverKey : null;
-    };
+function parseCookies(request) {
+    const list = {};
+    const cookieHeader = request.headers.cookie;
 
-    const targets = ['siawaseok', 'yudlp'];
-    for (const key of targets) {
-        try {
-            const result = await check(videoId, key);
-            if (result) return result;
-        } catch (e) {
-            continue;
-        }
+    if (cookieHeader) {
+        cookieHeader.split(';').forEach(cookie => {
+            let parts = cookie.split('=');
+            list[parts.shift().trim()] = decodeURI(parts.join('='));
+        });
     }
-    return null;
+
+    return list;
 }
 
-function normalizeVideoData(info) {
-    return {
-        title: info.primary_info?.title?.text || "不明なタイトル",
-        channel: {
-            id: info.secondary_info?.owner?.author?.id,
-            name: info.secondary_info?.owner?.author?.name,
-            icon: info.secondary_info?.owner?.author?.thumbnails?.[0]?.url
-        },
-        stats: {
-            views: info.primary_info?.view_count?.short_view_count?.text || "0 views",
-            published: info.primary_info?.published
-        },
-        description: info.secondary_info?.description?.text || "",
-        recommendations: ytService.normalizeWatchNextFeed(info.watch_next_feed)
-    };
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
 }
+
 
 module.exports = router;
