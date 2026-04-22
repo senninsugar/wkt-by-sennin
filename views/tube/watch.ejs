@@ -160,11 +160,11 @@
         <button id="erroreloadButton" class="hidden absolute top-1/2 left-1/2 z-50 -translate-x-1/2 -translate-y-1/2 bg-blue-600 text-white font-semibold py-2 px-4 rounded-xl shadow-lg hover:bg-blue-700 transition">🔄 動画を再読み込み</button>
         </div>
             <div class="flex items-center mt-4 p-4 bg-gray-800 rounded">
-              <a href ="/wkt/c/<%= videoInfo.channelId %>">
-                <img src="<%= videoInfo.channelIcon %>" alt="アイコン" class="w-12 h-12 rounded-full">
+              <a href ="/wkt/c/<%= videoInfo.channel.id %>">
+                <img src="<%= videoInfo.channel.icon %>" alt="アイコン" class="w-12 h-12 rounded-full">
               </a>
                 <div class="ml-4">
-                  <h2 class="text-lg font-bold"><a href ="/wkt/c/<%= videoInfo.channelId %>"><%= videoInfo.channelName %></a></h2>
+                  <h2 class="text-lg font-bold"><a href ="/wkt/c/<%= videoInfo.channel.id %>"><%= videoInfo.channel.name %></a></h2>
                     <p class="text-sm text-gray-400"><%= videoInfo.channelSubsc %></p>
                 </div>
                   <button id="favoriteBtn" class="ml-auto p-2 rounded-full bg-gray-500">
@@ -174,7 +174,7 @@
 
     <div class="mt-4 p-4 bg-gray-800 rounded">
       <div class="mt-2 text-gray-400 text-sm">
-          <p><%= videoInfo.viewCount %>  ・  <%= videoInfo.likeCount %>いいね  ・  <%= videoInfo.published %></p>
+          <p><%= videoInfo.stats.views %>  ・  <%= videoInfo.likeCount %>いいね  ・  <%= videoInfo.stats.published %></p>
       </div>
     <div class="flex items-center justify-between">
         <h3 class="text-2xl font-bold"> 
@@ -185,7 +185,7 @@
         </button>
     </div>
     <div class="description mt-2">
-        <p class="text-base text-gray-300 mt-1"><%- (videoData.videoDes || "").replace(/\n/g, "<br>") %></p>
+        <p class="text-base text-gray-300 mt-1"><%- (videoInfo.description || "").replace(/\n/g, "<br>") %></p>
     </div>
    </div>
               
@@ -202,41 +202,41 @@
             </div>
             <div class="related-sidenone mt-4 p-4 bg-gray-800 rounded" id="related-sidenone">
             <h3 class="text-lg font-bold">関連動画</h3><br>
-<% if (videoInfo.watch_next_feed && videoInfo.watch_next_feed.length > 0) { %>
+<% if (videoInfo.recommendations && videoInfo.recommendations.length > 0) { %>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            <% videoInfo.watch_next_feed.forEach(video => { %>
+            <% videoInfo.recommendations.forEach(video => { %>
               <% if (video.type.endsWith("Video")) { %>
                 <div class="result-item w-auto h-auto bg-gray-700 p-5 rounded">
                     <a href="/wkt/watch/<%= video.id %>" class="thumbnail">
                         <img loading="lazy" src="/wkt/back/vi/<%= video.id %>/mqdefault.jpg" alt="<%= video.title.text %>" class="w-full h-auto rounded">
-                        <span class="video-duration"><%= video.duration.text %></span>
+                        <span class="video-duration"><%= video.duration?.text %></span>
                     </a>
                     <div class="mt-2 flex items-center">
-                        <a href="/wkt/c/<%= video.author.id %>" class="flex items-center">
-                            <img src="/wkt/back/yt3<%- (new URL(video.author.thumbnails[0].url)).pathname %>" alt="アイコン" class="w-8 h-8 rounded-full mr-2">
-                            <p class="text-sm text-gray-400"><%= video.author.name %></p>
+                        <a href="/wkt/c/<%= video.author?.id %>" class="flex items-center">
+                            <img src="/wkt/back/yt3<%- video.author?.thumbnails?.[0]?.url ? (new URL(video.author.thumbnails[0].url)).pathname : '' %>" alt="アイコン" class="w-8 h-8 rounded-full mr-2">
+                            <p class="text-sm text-gray-400"><%= video.author?.name %></p>
                         </a>
                     </div>
-                    <p class="text-lg font-bold"><%= video.title.text %></p>
+                    <p class="text-lg font-bold"><%= video.title?.text %></p>
                     <p class="text-xs text-gray-500"><%= video.view_count?.text || video.short_view_count?.text || "" %> - <%= video.published?.text || "" %></p>
                 </div>
               <% } else if (video.type.endsWith("Playlist")) { %>
                 <div class="result-item bg-gray-600 p-4 rounded">
                   <a href="/wkt/p/<%= video.id %>">
-                    <img src="/vi/<%= video?.endpoint?.payload?.videoId || video.first_videos[0]?.id %>/mqdefault.jpg" alt="<%= video.title.text %>" class="w-full h-auto rounded">
+                    <img src="/vi/<%= video?.endpoint?.payload?.videoId || video.first_videos?.[0]?.id %>/mqdefault.jpg" alt="<%= video.title?.text %>" class="w-full h-auto rounded">
                   </a>
                     <div class="mt-2">
-                        <p class="text-sm text-gray-400"><a href="/wkt/u/<%= video.author.id %>"><%= video.author.name %></a></p>
+                        <p class="text-sm text-gray-400"><a href="/wkt/u/<%= video.author?.id %>"><%= video.author?.name %></a></p>
                         <p class="text-lg font-bold">プレイリスト(<%= video.video_count?.text %>本以上の動画)</p>
                     </div>
                 </div>
               <% } else if (video.type.endsWith("Channel")) { %>
                 <div class="result-item bg-gray-600 p-4 rounded">
-                  <a href="/wkt/c/<%= video.author.id %>">
-                    <img src="<%= video.author.thumbnails[0].url %>" alt="<%= video.author.name %>" class="w-full h-auto rounded">
+                  <a href="/wkt/c/<%= video.author?.id %>">
+                    <img src="<%= video.author?.thumbnails?.[0]?.url %>" alt="<%= video.author?.name %>" class="w-full h-auto rounded">
                   </a>
                     <div class="mt-2">
-                        <p class="text-lg font-bold"><%= video.author.name %></p>
+                        <p class="text-lg font-bold"><%= video.author?.name %></p>
                         <p class="text-sm text-gray-400"><%= video.description_snippet?.text %></p>
                         <p class="text-xs text-gray-500"><%= video.subscriber_count?.text %> • <%= video.videos?.text || video.video_count?.text %></p>
                     </div>
@@ -276,17 +276,9 @@
             <p class="block mb-2">使用したサーバー: <strong><%= baseUrl.replace('https://', '').replace('.glitch.me', '') %></strong></p>
             <label class="block mb-2">サーバーを変える:
                 <select id="serverSelect" class="w-full bg-gray-800 text-white p-2 rounded">
-                    <option value="watawata8">watawata8</option>
-                    <option value="watawata37">watawata37</option>
-                    <option value="watawatawata">watawatawata</option>
-                    <option value="wataamee">wataamee</option>
-                    <option value="manawa">manawa</option>
-                    <option value="wakame02o">wakame02o</option>
-                    <option value="wakeup">wakeup</option>
-                    <option value="hortensia">hortensia</option>
-                    <option value="wata27">wata27</option>
-                    <option value="wakameme">wakameme</option>
-                    <option value="direct">direct</option>
+                    <option value="invidious">Standard</option>
+                    <option value="siawaseok">Premium Cache</option>
+                    <option value="yudlp">Fast Stream</option>
                 </select>
             </label>
             <button id="changeServer" class="control-button w-full bg-gray-700 py-2 hover:text-white p-2 rounded mb-2">🔃 サーバーを変更</button>
@@ -348,8 +340,8 @@
     </div>
     <div class="flex-1 overflow-y-auto" id="dougaBoxcon">
                 <h3 class="text-lg font-bold">関連動画</h3>
-<% if (videoInfo.watch_next_feed?.length) { %>
-<% videoInfo.watch_next_feed.forEach(video => { %>
+<% if (videoInfo.recommendations?.length) { %>
+<% videoInfo.recommendations.forEach(video => { %>
 <div class="mt-2 space-y-4">
   <% if (!video) return; %>
   <% if (video.type.endsWith("Video")) { %>
@@ -358,15 +350,15 @@
         <img src="/wkt/back/vi/<%= video.id %>/maxresdefault.jpg" alt="サムネ" class="w-full h-auto rounded">
       </a>
       <div class="flex items-center mt-2">
-        <% if (video.author?.thumbnails.length) { %>
+        <% if (video.author?.thumbnails?.length) { %>
           <a href="/wkt/c/<%= video.author.id %>"><img src="/wkt/back/yt3<%- (new URL(video.author.thumbnails[0].url)).pathname %>" alt="アイコン" class="w-6 h-6 rounded-full"></a>
         <% } %>
         <p class="text-sm text-gray-400 ml-2">
-          <a href="/wkt/c/<%= video.author.id %>"><%= video.author.name %></a>
+          <a href="/wkt/c/<%= video.author?.id %>"><%= video.author?.name %></a>
         </p>
       </div>
       <p class="text-sm font-bold mt-1">
-        <a href="/wkt/watch/<%= video.id %>"><%= video.title.text %></a>
+        <a href="/wkt/watch/<%= video.id %>"><%= video.title?.text %></a>
       </p>
       <p class="text-xs text-gray-400">
         <%= video.short_view_count?.text || video.view_count?.text %>
@@ -375,20 +367,20 @@
   <% } else if (video.type.endsWith("Playlist")) { %>
     <div class="bg-gray-800 p-2 rounded">
       <a href="/wkt/p/<%= video.id %>">
-        <img src="/wkt/back/vi/<%= video?.endpoint?.payload?.videoId || video.first_videos[0]?.id %>/mqdefault.jpg" alt="サムネ" class="w-full h-auto rounded">
+        <img src="/wkt/back/vi/<%= video?.endpoint?.payload?.videoId || video.first_videos?.[0]?.id %>/mqdefault.jpg" alt="サムネ" class="w-full h-auto rounded">
       </a>
       <p class="text-sm font-bold mt-1">
-        <a href="/wkt/p/<%= video.id %>"><%= video.title.text %></a>
+        <a href="/wkt/p/<%= video.id %>"><%= video.title?.text %></a>
       </p>
       <p class="text-xs text-gray-400">動画数: <%= video.video_count?.text %></p>
     </div>
   <% } else if (video.type.endsWith("Channel")) { %>
     <div class="bg-gray-800 p-2 rounded">
-      <a href="/wkt/c/<%= video.author.id %>">
-        <img src="/wkt/back/yt3<%- (new URL(video.author.thumbnails[0].url)).pathname %>" alt="チャンネルアイコン" class="w-16 h-16 rounded-full mx-auto">
+      <a href="/wkt/c/<%= video.author?.id %>">
+        <img src="/wkt/back/yt3<%- video.author?.thumbnails?.[0]?.url ? (new URL(video.author.thumbnails[0].url)).pathname : '' %>" alt="チャンネルアイコン" class="w-16 h-16 rounded-full mx-auto">
       </a>
       <p class="text-sm font-bold mt-1 text-center">
-        <a href="/wkt/c/<%= video.author.id %>" target="_top"><%= video.author.name %></a>
+        <a href="/wkt/c/<%= video.author?.id %>" target="_top"><%= video.author?.name %></a>
       </p>
       <p class="text-xs text-gray-400 text-center">
         登録者数: <%= video.subscriber_count?.text %>
@@ -405,29 +397,29 @@
             <button id="toggledouga" class="mt-4 w-full bg-gray-700 py-2 rounded">関連動画を開く</button>
             <button id="toggleControlPanel" class="mt-4 w-full bg-gray-700 py-2 rounded">コントロール</button>
             <div class="mt-4">
-<% if (videoInfo.watch_next_feed && videoInfo.watch_next_feed.length > 0) { %>
+<% if (videoInfo.recommendations && videoInfo.recommendations.length > 0) { %>
 <div class="mt-2 space-y-2">
   <% let hasValidVideo = false; %>
-  <% videoInfo.watch_next_feed.forEach(video => { %>
+  <% videoInfo.recommendations.forEach(video => { %>
     <% if (!video || !video.type) return; %>
     <% if (video.type.endsWith("Video")) { %>
       <% hasValidVideo = true; %>
       <div class="bg-gray-800 p-2 rounded result-item">
         <a href="/wkt/watch/<%= video.id %>">
-          <img src="/wkt/back/vi/<%= video.id %>/mqdefault.jpg" alt="<%= video.title.text %> のサムネイル" class="w-full h-auto rounded">
+          <img src="/wkt/back/vi/<%= video.id %>/mqdefault.jpg" alt="<%= video.title?.text %> のサムネイル" class="w-full h-auto rounded">
         </a>
         <div class="flex items-center mt-2">
-          <% if (video.author?.thumbnails.length) { %>
+          <% if (video.author?.thumbnails?.length) { %>
             <a href="/wkt/c/<%= video.author.id %>">
               <img src="/wkt/back/yt3<%- (new URL(video.author.thumbnails[0].url)).pathname %>" alt="<%= video.author.name %> のアイコン" class="w-6 h-6 rounded-full">
             </a>
           <% } %>
           <p class="text-sm text-gray-400 ml-2">
-              <a href="/wkt/c/<%= video.author.id %>"><%= video.author.name %></a>
+              <a href="/wkt/c/<%= video.author?.id %>"><%= video.author?.name %></a>
           </p>
         </div>
         <p class="text-sm font-bold mt-1">
-          <%= video.title.text %>
+          <%= video.title?.text %>
         </p>
         <p class="text-xs text-gray-400">
           <%= video.short_view_count?.text || video.view_count?.text || '不明' %>
@@ -437,21 +429,21 @@
       <% hasValidVideo = true; %>
       <div class="bg-gray-800 p-2 rounded">
         <a href="/wkt/p/<%= video.id %>">
-          <img src="/wkt/back/vi/<%= video?.endpoint?.payload?.videoId || video.first_videos?.[0]?.id || 'default' %>/mqdefault.jpg" alt="<%= video.title.text %> のサムネイル" class="w-full h-24 rounded">
+          <img src="/wkt/back/vi/<%= video?.endpoint?.payload?.videoId || video.first_videos?.[0]?.id || 'default' %>/mqdefault.jpg" alt="<%= video.title?.text %> のサムネイル" class="w-full h-24 rounded">
         </a>
         <p class="text-sm font-bold mt-1">
-          <a href="/wkt/p/<%= video.id %>"><%= video.title.text %></a>
+          <a href="/wkt/p/<%= video.id %>"><%= video.title?.text %></a>
         </p>
         <p class="text-xs text-gray-400">動画数: <%= video.video_count?.text || '不明' %></p>
       </div>
     <% } else if (video.type.endsWith("Channel")) { %>
       <% hasValidVideo = true; %>
       <div class="bg-gray-800 p-2 rounded">
-        <a href="/wkt/c/<%= video.author.id %>">
-          <img src="/wkt/back/yt3<%- (new URL(video.author.thumbnails[0].url)).pathname %>" alt="<%= video.author.name %> のチャンネルアイコン" class="w-16 h-16 rounded-full mx-auto">
+        <a href="/wkt/c/<%= video.author?.id %>">
+          <img src="/wkt/back/yt3<%- video.author?.thumbnails?.[0]?.url ? (new URL(video.author.thumbnails[0].url)).pathname : '' %>" alt="<%= video.author?.name %> のチャンネルアイコン" class="w-16 h-16 rounded-full mx-auto">
         </a>
         <p class="text-sm font-bold mt-1 text-center">
-          <a href="/wkt/c/<%= video.author.id %>"><%= video.author.name %></a>
+          <a href="/wkt/c/<%= video.author?.id %>"><%= video.author?.name %></a>
         </p>
         <p class="text-xs text-gray-400 text-center">
           登録者数: <%= video.subscriber_count?.text || '非公開' %>
@@ -539,7 +531,7 @@ document.getElementById('reloadVideo').addEventListener('click', function() {
   
 //エラー処理
 video.addEventListener('error', function() {
-    showerrorMessage(`動画の読み込みに失敗しました: ${error}`);
+    showerrorMessage(`動画の読み込みに失敗しました`);
     let lastCurrentTime = video.currentTime;
     video.load();
     video.addEventListener('loadedmetadata', function() {
@@ -834,21 +826,21 @@ video.addEventListener('ended', () => {
 });
   
 // 履歴
-const videoId = "<%= videoId %>";
-const channelId = "<%= videoInfo.channelId %>";
-const channelName = "<%= videoInfo.channelName %>";
-const videoTitle = "<%= videoInfo.title %>";
+const videoId_val = "<%= videoId %>";
+const channelId_val = "<%= videoInfo.channel.id %>";
+const channelName_val = "<%= videoInfo.channel.name %>";
+const videoTitle_val = "<%= videoInfo.title %>";
 
-function saveToHistory(videoId, channelId, channelName, videoTitle) {
+function saveToHistory(vId, cId, cName, vTitle) {
     let history = getHistoryFromLocalStorage();
-    const historyIndex = history.findIndex(track => track.videoId === videoId);
+    const historyIndex = history.findIndex(track => track.videoId === vId);
     if (historyIndex !== -1) {
         history.splice(historyIndex, 1);
     }
     if (history.length >= 30) {
         history.shift();
     }
-    history.push({ videoId, channelId, channelName, videoTitle });
+    history.push({ videoId: vId, channelId: cId, channelName: cName, videoTitle: vTitle });
     localStorage.setItem("wakametubehistory", JSON.stringify(history));
 }
 
@@ -866,16 +858,16 @@ function getHistoryFromLocalStorage() {
 function getFavoritesFromLocalStorage() {
   return JSON.parse(localStorage.getItem("wakametubefavorites") || "[]");
 }
-function saveToFavorites(videoId, channelId, channelName, videoTitle) {
+function saveToFavorites(vId, cId, cName, vTitle) {
   let favorites = getFavoritesFromLocalStorage();
   const favIcon = document.getElementById("favoriteIcon");
-  const favIndex = favorites.findIndex(track => track.videoId === videoId);
+  const favIndex = favorites.findIndex(track => track.videoId === vId);
   if (favIndex !== -1) {
     favorites.splice(favIndex, 1);
-    showMessage(`${videoTitle}の<a href="/wkt/cl/fav" style='color: #60a5fa;'>お気に入り</a>を解除しました☑️`);
+    showMessage(`${vTitle}の<a href="/wkt/cl/fav" style='color: #60a5fa;'>お気に入り</a>を解除しました☑️`);
   } else {
-    favorites.push({ videoId, channelId, channelName, videoTitle });
-    showMessage(`${videoTitle}を<a href="/wkt/cl/fav" style='color: #60a5fa;'>お気に入り</a>に追加しました☑️`);
+    favorites.push({ videoId: vId, channelId: cId, channelName: cName, videoTitle: vTitle });
+    showMessage(`${vTitle}を<a href="/wkt/cl/fav" style='color: #60a5fa;'>お気に入り</a>に追加しました☑️`);
   }
   localStorage.setItem("wakametubefavorites", JSON.stringify(favorites));
 }
@@ -885,18 +877,18 @@ async function checkfav() {
   let favorites = getFavoritesFromLocalStorage();
   let isFavorited;
   if(favorites){
-    isFavorited = favorites.some(track => track.videoId === videoId);
+    isFavorited = favorites.some(track => track.videoId === videoId_val);
   }
   favIcon.src = isFavorited ? "https://cdn.glitch.global/44a02c72-aa32-4a7b-bb98-801035391fbc/IMG_3046.png" : "https://cdn.glitch.global/44a02c72-aa32-4a7b-bb98-801035391fbc/IMG_3045.png";
 }
 checkfav()
 document.getElementById("favoriteBtn").addEventListener("click", function() {
-  saveToFavorites(videoId, channelId, channelName, videoTitle);
+  saveToFavorites(videoId_val, channelId_val, channelName_val, videoTitle_val);
   const favIcon = document.getElementById("favoriteIcon");
   let updatedFavorites = getFavoritesFromLocalStorage();
   let nowFavorited;
   if(updatedFavorites){
-    nowFavorited = updatedFavorites.some(track => track.videoId === videoId);
+    nowFavorited = updatedFavorites.some(track => track.videoId === videoId_val);
   }
   favIcon.src = nowFavorited ? "https://cdn.glitch.global/44a02c72-aa32-4a7b-bb98-801035391fbc/IMG_3046.png" : "https://cdn.glitch.global/44a02c72-aa32-4a7b-bb98-801035391fbc/IMG_3045.png";
 });
@@ -975,7 +967,7 @@ window.addEventListener("load", function() {
     if ("<%= baseUrl.replace('https://', '').replace('.glitch.me', '') %>" === "directk") {
       showerrorMessage("現在、このサイトに高い負荷がかかっていてサーバーへのリクエストがキャンセルされたため、自動的にdirectサーバーを使用しました。")
     }
-    saveToHistory(videoId, channelId, channelName, videoTitle);
+    saveToHistory(videoId_val, channelId_val, channelName_val, videoTitle_val);
 });
   
 function showTutorial() {
