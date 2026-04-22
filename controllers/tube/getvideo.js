@@ -40,12 +40,23 @@ router.get('/:id', async (req, res) => {
       };
       res.render('tube/watch.ejs', { videoData, videoInfo, videoId, baseUrl });
   } catch (error) {
+      // メインの取得に失敗した場合、ytdlpのフォールバックURLを試行する
+      const fallbackUrl = `https://yudlp.vercel.app/stream/${videoId}`;
       const shufServerUrls = shuffleArray([...serverUrls]);
+      
+      // videoDataをフォールバックURLで上書きしてレンダリングを試みる
+      // videoInfoが取得できていない可能性があるため、最低限の情報を補完
+      const videoDataFallback = {
+        url: fallbackUrl
+      };
+
       res.status(500).render('tube/mattev.ejs', { 
-      videoId, baseUrl, 
+      videoId, 
+      baseUrl: fallbackUrl, 
       serverUrls: shufServerUrls,
       error: '動画を取得できません', 
-      details: error.message 
+      details: error.message,
+      videoData: videoDataFallback 
     });
   }
 });
