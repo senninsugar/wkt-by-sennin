@@ -86,15 +86,17 @@ async function findBestCacheServer(videoId) {
 function normalizeVideoData(info) {
     return {
         title: info.primary_info?.title?.text || "不明なタイトル",
-        channelId: info.secondary_info?.owner?.author?.id || "",
-        channelName: info.secondary_info?.owner?.author?.name || "",
-        channelIcon: info.secondary_info?.owner?.author?.thumbnails?.[0]?.url || "",
-        channelSubsc: info.secondary_info?.owner?.subscriber_count?.text || "",
-        published: info.primary_info?.published || "",
-        viewCount: info.primary_info?.view_count?.short_view_count?.text || info.primary_info?.view_count?.view_count?.text || "",
-        likeCount: info.primary_info?.menu?.top_level_buttons?.short_like_count || info.primary_info?.menu?.top_level_buttons?.like_count || info.basic_info?.like_count || "",
+        channel: {
+            id: info.secondary_info?.owner?.author?.id,
+            name: info.secondary_info?.owner?.author?.name,
+            icon: info.secondary_info?.owner?.author?.thumbnails?.[0]?.url
+        },
+        stats: {
+            views: info.primary_info?.view_count?.short_view_count?.text || "0 views",
+            published: info.primary_info?.published
+        },
         description: info.secondary_info?.description?.text || "",
-        watch_next_feed: ytService.normalizeWatchNextFeed(info.watch_next_feed)
+        recommendations: ytService.normalizeWatchNextFeed(info.watch_next_feed)
     };
 }
 
