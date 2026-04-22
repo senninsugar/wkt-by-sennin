@@ -128,6 +128,7 @@
             <button onclick="window.location.href='/wkt/cl/history'" class="w-full bg-gray-700 py-2 hover:text-white rounded mb-2">履歴</button>
             <button onclick="window.open('/wkt/back/vi/<%= videoId %>/maxresdefault.jpg', '_blank');" class="w-full bg-gray-700 py-2 hover:text-white p-2 rounded mb-2">サムネをダウンロード</button>
             <button onclick="window.open('<%- videoData.stream_url %>', '_blank');" class="w-full bg-gray-700 py-2 hover:text-white p-2 rounded mb-2">ストリームURLに移動</button>
+            <button id="downloadM3u8Btn" class="w-full bg-blue-700 py-2 hover:text-white p-2 rounded mb-2">動画(m3u8)をダウンロード</button>
         </nav>
         <div class="mt-4">
             <button id="reloadButton" class="w-full bg-gray-700 py-2 hover:text-white rounded mb-2">動画を再読み込み</button>
@@ -257,6 +258,7 @@
     <div id="controlTab" class="tab-content active">
         <div class="control-section mb-4">
             <button id="reloadVideo" class="control-button w-full bg-gray-700 py-2 hover:text-white p-2 rounded mb-2">🔄 再読み込み</button>
+            <button id="downloadM3u8Btn2" class="control-button w-full bg-blue-700 py-2 hover:text-white p-2 rounded mb-2">📥 関連動画含むDL(m3u8)</button>
         </div>
         <% if (videoData.streamUrls && videoData.streamUrls.length > 0) { %>
         <div class="control-section mb-4">
@@ -368,6 +370,9 @@
       <p class="text-sm font-bold mt-1">
         <a href="/wkt/watch/<%= video.id %>"><%= video.title.text %></a>
       </p>
+      <p class="text-sm font-bold mt-1">
+        <button onclick="window.location.href='/wkt/download/<%= video.id %>'" class="text-xs bg-blue-600 p-1 rounded">DL</button>
+      </p>
       <p class="text-xs text-gray-400">
         <%= video.short_view_count?.text || video.view_count?.text %>
       </p>
@@ -477,6 +482,27 @@
     <button id="expandSidebar" class="expand-sidebar-btn">◀ サイドバーを開く</button>
           
 <script>
+// ダウンロード処理
+const downloadM3u8 = async () => {
+    showMessage("ダウンロード用URLを生成中...");
+    try {
+        const response = await fetch("/wkt/download/<%= videoId %>");
+        if (!response.ok) throw new Error("取得失敗");
+        const data = await response.json();
+        if (data.url) {
+            window.open(data.url, '_blank');
+            showMessage("ダウンロードを開始しました☑️");
+        } else {
+            throw new Error("URLが見つかりません");
+        }
+    } catch (e) {
+        showerrorMessage("ダウンロードに失敗しました。");
+        console.error(e);
+    }
+};
+document.getElementById("downloadM3u8Btn").addEventListener("click", downloadM3u8);
+document.getElementById("downloadM3u8Btn2").addEventListener("click", downloadM3u8);
+
 // コメント
 const commentContainers = [document.getElementById("commentsList1"), document.getElementById("commentsList2")];
 const errorContainers = [document.getElementById("commentError1"), document.getElementById("commentError2")];
