@@ -1,8 +1,8 @@
 {
-  "name": "wakametube",
-  "version": "1.0.8",
+  "name": "wktbysennin",
+  "version": "0.1.0",
   "main": "server.js",
-  "license": "CC-BY-4.0",
+  "license": "MIT",
   "dependencies": {
     "express": "^4.21.2",
     "compression": "^1.8.0",
@@ -13,17 +13,18 @@
     "cookie-parser": "^1.4.7",
     "soundcloud-downloader": "^1.0.0",
     "youtubei.js": "latest",
-    "undici": "latest",
+    "undici": "^6.19.8",
     "miniget": "^4.2.3",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2"
   },
   "description": "wakame",
   "engines": {
     "node": "20.x"
   },
-  "author": "wakame02",
+  "author": "sennin",
   "bugs": {
-    "email": "23h11008@gmail.com"
+    "email": ""
   },
   "devDependencies": {},
   "scripts": {
